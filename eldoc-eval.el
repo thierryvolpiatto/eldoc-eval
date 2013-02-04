@@ -151,7 +151,7 @@ See `with-eldoc-in-minibuffer'."
             (when doc (funcall eldoc-in-minibuffer-show-fn doc))))
       (scan-error nil)
       (beginning-of-buffer nil)
-      (error (and debug-on-error (message "Eldoc in minibuffer error: %S" err))))))
+      (error (message "Eldoc in minibuffer error: %S" err)))))
 
 (defun eval-expression-with-eldoc ()
   "Eval expression with eldoc support in mode-line."
