@@ -22,8 +22,8 @@
 ;;; Commentary:
 
 ;;; Code:
-(require 'eldoc)
 
+(require 'eldoc)
 
 ;;; Minibuffer support.
 ;;  Enable displaying eldoc info in something else
@@ -54,6 +54,54 @@ Should take one arg: the string to display"
   "Whether minibuffer have own frame or not."
   :group 'lisp
   :type 'boolean)
+
+;;; Compatibility with Emacs-24.4
+;; New implementation of eldoc in minibuffer that come
+;; with Emacs-24.4 show the eldoc info of current-buffer while
+;; minibuffer is in use, disable this and inline old Emacs behavior.
+
+(and (boundp 'eldoc-message-function) (setq eldoc-message-function nil))
+
+;;; Inline old definition (24.3)
+;;
+(defun eldoc-message (&rest args)
+  (let ((omessage eldoc-last-message))
+    (setq eldoc-last-message
+	  (cond ((eq (car args) eldoc-last-message) eldoc-last-message)
+		((null (car args)) nil)
+		;; If only one arg, no formatting to do, so put it in
+		;; eldoc-last-message so eq test above might succeed on
+		;; subsequent calls.
+		((null (cdr args)) (car args))
+		(t (apply 'format args))))
+    ;; In emacs 19.29 and later, and XEmacs 19.13 and later, all messages
+    ;; are recorded in a log.  Do not put eldoc messages in that log since
+    ;; they are Legion.
+    ;; Emacs way of preventing log messages.
+    (let ((message-log-max nil))
+      (cond (eldoc-last-message (message "%s" eldoc-last-message))
+	    (omessage (message nil)))))
+  eldoc-last-message)
+
+(defun eldoc-display-message-p ()
+  (and (eldoc-display-message-no-interference-p)
+       ;; If this-command is non-nil while running via an idle
+       ;; timer, we're still in the middle of executing a command,
+       ;; e.g. a query-replace where it would be annoying to
+       ;; overwrite the echo area.
+       (and (not this-command)
+	    (symbolp last-command)
+	    (intern-soft (symbol-name last-command)
+			 eldoc-message-commands))))
+
+(defun eldoc-display-message-no-interference-p ()
+  (and eldoc-mode
+       (not executing-kbd-macro)
+       (not (and (boundp 'edebug-active) edebug-active))
+       ;; Having this mode operate in an active minibuffer/echo area causes
+       ;; interference with what's going on there.
+       (not cursor-in-echo-area)
+       (not (eq (selected-window) (minibuffer-window)))))
 
 ;; Internal.
 (defvar eldoc-active-minibuffers-list nil
