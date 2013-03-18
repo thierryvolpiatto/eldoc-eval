@@ -61,37 +61,7 @@ Should take one arg: the string to display"
 ;; minibuffer is in use, disable this and inline old Emacs behavior.
 
 (when (boundp 'eldoc-message-function)
-  (setq eldoc-message-function nil)
-
-  (defun eldoc-message (&rest args)
-    (let ((omessage eldoc-last-message))
-      (setq eldoc-last-message
-            (cond ((eq (car args) eldoc-last-message) eldoc-last-message)
-                  ((null (car args)) nil)
-                  ;; If only one arg, no formatting to do, so put it in
-                  ;; eldoc-last-message so eq test above might succeed on
-                  ;; subsequent calls.
-                  ((null (cdr args)) (car args))
-                  (t (apply 'format args))))
-      ;; In emacs 19.29 and later, and XEmacs 19.13 and later, all messages
-      ;; are recorded in a log.  Do not put eldoc messages in that log since
-      ;; they are Legion.
-      ;; Emacs way of preventing log messages.
-      (let ((message-log-max nil))
-        (cond (eldoc-last-message (message "%s" eldoc-last-message))
-              (omessage (message nil)))))
-    eldoc-last-message)
-
-  (defun eldoc-display-message-p ()
-    (and (eldoc-display-message-no-interference-p)
-         ;; If this-command is non-nil while running via an idle
-         ;; timer, we're still in the middle of executing a command,
-         ;; e.g. a query-replace where it would be annoying to
-         ;; overwrite the echo area.
-         (and (not this-command)
-              (symbolp last-command)
-              (intern-soft (symbol-name last-command)
-                           eldoc-message-commands))))
+  (setq eldoc-message-function 'message)
 
   (defun eldoc-display-message-no-interference-p ()
     (and eldoc-mode
@@ -175,27 +145,26 @@ See `with-eldoc-in-minibuffer'."
 
 (defun eldoc-mode-in-minibuffer ()
   "Show eldoc for current minibuffer input."
-  (let ((buf (with-selected-window (minibuffer-window)
-               (buffer-name))))
+  (let ((buf (buffer-name (window-buffer (active-minibuffer-window)))))
     ;; If this minibuffer have been started with
     ;;`with-eldoc-in-minibuffer' give it eldoc support
     ;; and update mode-line, otherwise do nothing.
     (condition-case err
         (when (member buf eldoc-active-minibuffers-list)
-          (let* ((str-all (with-current-buffer buf
-                            (minibuffer-completion-contents)))
-                 (sym     (when str-all
-                            (with-temp-buffer
-                              (insert str-all)
-                              (goto-char (point-max))
-                              (unless (looking-back ")\\|\"")
-                                (forward-char -1))
-                              (eldoc-current-symbol))))
-                 (info-fn (eldoc-fnsym-in-current-sexp))
-                 (doc     (or (eldoc-get-var-docstring sym)
-                              (eldoc-get-fnsym-args-string
-                               (car info-fn) (cadr info-fn)))))
-            (when doc (funcall eldoc-in-minibuffer-show-fn doc))))
+          (with-current-buffer buf
+            (let* ((str-all (minibuffer-completion-contents))
+                   (sym     (when str-all
+                              (with-temp-buffer
+                                (insert str-all)
+                                (goto-char (point-max))
+                                (unless (looking-back ")\\|\"")
+                                  (forward-char -1))
+                                (eldoc-current-symbol))))
+                   (info-fn (eldoc-fnsym-in-current-sexp))
+                   (doc     (or (eldoc-get-var-docstring sym)
+                                (eldoc-get-fnsym-args-string
+                                 (car info-fn) (cadr info-fn)))))
+              (when doc (funcall eldoc-in-minibuffer-show-fn doc)))))
       (scan-error nil)
       (beginning-of-buffer nil)
       (error (message "Eldoc in minibuffer error: %S" err)))))
