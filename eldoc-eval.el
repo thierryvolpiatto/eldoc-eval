@@ -45,7 +45,7 @@ Should take one arg: the string to display"
   :group 'eldoc
   :type 'number)
 
-(defcustom eval-prefered-function 'pp-eval-expression
+(defcustom eldoc-eval-prefered-function 'pp-eval-expression
   "Prefered function to use with `M-:'."
   :group 'lisp
   :type 'function)
@@ -173,7 +173,7 @@ See `with-eldoc-in-minibuffer'."
   "Eval expression with eldoc support in mode-line."
   (interactive)
   (with-eldoc-in-minibuffer
-    (call-interactively eval-prefered-function)))
+    (call-interactively eldoc-eval-prefered-function)))
 
 ;; Bind it to `M-:'.
 (global-set-key [remap eval-expression] 'eval-expression-with-eldoc)
