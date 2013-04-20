@@ -1,4 +1,4 @@
-;;; eldoc-eval.el -- Show eldoc when using M-:
+;;; eldoc-eval.el --- Show eldoc when using M-:
 
 ;; Copyright (C) 2011 Free Software Foundation, Inc.
 
