@@ -72,13 +72,6 @@ Should take one arg: the string to display"
          (not cursor-in-echo-area)
          (not (eq (selected-window) (minibuffer-window))))))
 
-;; Emacs-24.4 make `minibuffer-completion-contents' obsolete,
-;; inline it to shutup byte compiler.
-(defun eldoc-eval-minibuffer-completion-contents ()
-  "Return the user input in a minibuffer before point as a string.
-That is what completion commands operate on."
-  (buffer-substring (field-beginning) (point)))
-
 ;; Internal.
 (defvar eldoc-active-minibuffers-list nil
   "Store actives minibuffers with eldoc enabled.")
@@ -159,14 +152,10 @@ See `with-eldoc-in-minibuffer'."
     (condition-case err
         (when (member buf eldoc-active-minibuffers-list)
           (with-current-buffer buf
-            (let* ((str-all (eldoc-eval-minibuffer-completion-contents))
-                   (sym     (when str-all
-                              (with-temp-buffer
-                                (insert str-all)
-                                (goto-char (point-max))
-                                (unless (looking-back ")\\|\"")
-                                  (forward-char -1))
-                                (eldoc-current-symbol))))
+            (let* ((sym (save-excursion
+                          (unless (looking-back ")\\|\"")
+                            (forward-char -1))
+                          (eldoc-current-symbol)))
                    (info-fn (eldoc-fnsym-in-current-sexp))
                    (doc     (or (eldoc-get-var-docstring sym)
                                 (eldoc-get-fnsym-args-string
