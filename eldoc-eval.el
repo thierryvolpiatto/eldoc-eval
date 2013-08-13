@@ -56,11 +56,6 @@
 ;;  Enable displaying eldoc info in something else
 ;;  Than minibuffer when this one is in use.
 ;;
-(defcustom eldoc-in-minibuffer t
-  "Turn on eldoc in minibuffer."
-  :group 'eldoc
-  :type 'bolean)
-
 (defcustom eldoc-in-minibuffer-show-fn 'eldoc-show-in-mode-line
   "A function to display eldoc info.
 Should take one arg: the string to display"
@@ -92,7 +87,7 @@ Should take one arg: the string to display"
 
   (defadvice eldoc-display-message-no-interference-p
       (around eldoc-eval activate)
-    (if (not eldoc-in-minibuffer)
+    (if (not eldoc-mode-in-minibuffer)
         ad-do-it
     (and eldoc-mode
          (not executing-kbd-macro)
@@ -117,10 +112,10 @@ See `with-eldoc-in-minibuffer'."
 (defmacro with-eldoc-in-minibuffer (&rest body)
   "Enable eldoc support for minibuffer input that runs in BODY."
   (declare (indent 0) (debug t))
-  `(let ((timer (and eldoc-in-minibuffer
+  `(let ((timer (and eldoc-mode-in-minibuffer
                      (run-with-idle-timer
                       eldoc-idle-delay
-                      'repeat 'eldoc-mode-in-minibuffer))))
+                      'repeat 'run-eldoc-in-minibuffer))))
      (unwind-protect
          (minibuffer-with-setup-hook
              ;; When minibuffer is activated in body,
@@ -171,10 +166,21 @@ See `with-eldoc-in-minibuffer'."
 (defun eldoc-mode-line-toggle-rolling ()
   (interactive)
   (setq eldoc-mode-line-rolling-flag (not eldoc-mode-line-rolling-flag)))
-(define-key minibuffer-local-map (kbd "<C-M-right>") 'eldoc-mode-line-toggle-rolling)
 
-(defun eldoc-mode-in-minibuffer ()
+(defvar eldoc-mode-in-minibuffer-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "M-:") 'eval-expression-with-eldoc)
+    map))
+
+;;;###autoload
+(define-minor-mode eldoc-mode-in-minibuffer
   "Show eldoc for current minibuffer input."
+  :global t
+  :keymap eldoc-mode-in-minibuffer-map
+  (define-key minibuffer-local-map (kbd "<C-M-right>")
+    'eldoc-mode-line-toggle-rolling))
+
+(defun run-eldoc-in-minibuffer ()
   (let ((buf (window-buffer (active-minibuffer-window))))
     ;; If this minibuffer have been started with
     ;;`with-eldoc-in-minibuffer' give it eldoc support
@@ -195,17 +201,12 @@ See `with-eldoc-in-minibuffer'."
       (beginning-of-buffer nil)
       (error (message "Eldoc in minibuffer error: %S" err)))))
 
+;;;###autoload
 (defun eval-expression-with-eldoc ()
   "Eval expression with eldoc support in mode-line."
   (interactive)
   (with-eldoc-in-minibuffer
     (call-interactively eval-preferred-function)))
-
-;; Bind it to `M-:'.
-
-;; FIXME: Turn eldoc-in-minibuffer into a global minor mode, and place this
-;; binding in its keymap.
-(global-set-key [remap eval-expression] 'eval-expression-with-eldoc)
 
 
 (provide 'eldoc-eval)
