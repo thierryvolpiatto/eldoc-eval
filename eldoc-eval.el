@@ -39,18 +39,18 @@
 ;; Users of own minibuffer frame will have to set
 ;; `eldoc-in-minibuffer-own-frame-p' to non-nil.
 ;;
-;; You can turn off eldoc support in minibuffer any time
-;; by setting `eldoc-in-minibuffer' to nil.
+;; You can turn On/Off eldoc support in minibuffer any time
+;; with `eldoc-in-minibuffer-mode'.
+;;
+;;; Install:
+;; Add to .emacs:
+;;
+;;   (autoload 'eldoc-in-minibuffer-mode "eldoc-eval")
+;;   (eldoc-in-minibuffer-mode 1)
+
 
 ;;; Code:
 (require 'eldoc)
-
-;; FIXME: This has no autoloads and (require 'eldoc-eval) will change Emacs's
-;; behavior, against usual conventions.  The fix is to define
-;; eldoc-in-minibuffer as a (global) minor mode, then autoload it.  So the
-;; default value will be nil, and the user can enable it with
-;; (eldoc-in-minibuffer 1) or by customizing eldoc-in-minibuffer, rather than
-;; by adding (require 'eldoc-eval) in her .emacs.
 
 ;;; Minibuffer support.
 ;;  Enable displaying eldoc info in something else
@@ -87,7 +87,7 @@ Should take one arg: the string to display"
 
   (defadvice eldoc-display-message-no-interference-p
       (around eldoc-eval activate)
-    (if (not eldoc-mode-in-minibuffer)
+    (if (not eldoc-in-minibuffer-mode)
         ad-do-it
     (and eldoc-mode
          (not executing-kbd-macro)
@@ -112,7 +112,7 @@ See `with-eldoc-in-minibuffer'."
 (defmacro with-eldoc-in-minibuffer (&rest body)
   "Enable eldoc support for minibuffer input that runs in BODY."
   (declare (indent 0) (debug t))
-  `(let ((timer (and eldoc-mode-in-minibuffer
+  `(let ((timer (and eldoc-in-minibuffer-mode
                      (run-with-idle-timer
                       eldoc-idle-delay
                       'repeat 'run-eldoc-in-minibuffer))))
@@ -173,7 +173,7 @@ See `with-eldoc-in-minibuffer'."
     map))
 
 ;;;###autoload
-(define-minor-mode eldoc-mode-in-minibuffer
+(define-minor-mode eldoc-in-minibuffer-mode
   "Show eldoc for current minibuffer input."
   :global t
   :keymap eldoc-mode-in-minibuffer-map
