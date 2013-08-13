@@ -1,6 +1,6 @@
 ;;; eldoc-eval.el --- Enable eldoc support when minibuffer is in use.
 
-;; Copyright (C) 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2011, 2012, 2013 Free Software Foundation, Inc.
 
 ;; Author: Thierry Volpiatto <thierry.volpiatto@gmail.com>
 ;; Version: 0.1
@@ -45,6 +45,12 @@
 ;;; Code:
 (require 'eldoc)
 
+;; FIXME: This has no autoloads and (require 'eldoc-eval) will change Emacs's
+;; behavior, against usual conventions.  The fix is to define
+;; eldoc-in-minibuffer as a (global) minor mode, then autoload it.  So the
+;; default value will be nil, and the user can enable it with
+;; (eldoc-in-minibuffer 1) or by customizing eldoc-in-minibuffer, rather than
+;; by adding (require 'eldoc-eval) in her .emacs.
 
 ;;; Minibuffer support.
 ;;  Enable displaying eldoc info in something else
@@ -84,14 +90,17 @@ Should take one arg: the string to display"
 (when (boundp 'eldoc-message-function)
   (setq eldoc-message-function 'message)
 
-  (defun eldoc-display-message-no-interference-p ()
+  (defadvice eldoc-display-message-no-interference-p
+      (around eldoc-eval activate)
+    (if (not eldoc-in-minibuffer)
+        ad-do-it
     (and eldoc-mode
          (not executing-kbd-macro)
          (not (and (boundp 'edebug-active) edebug-active))
          ;; Having this mode operate in an active minibuffer/echo area causes
          ;; interference with what's going on there.
          (not cursor-in-echo-area)
-         (not (eq (selected-window) (minibuffer-window))))))
+           (not (eq (selected-window) (minibuffer-window)))))))
 
 ;; Internal.
 (defvar eldoc-active-minibuffers-list nil
@@ -103,7 +112,7 @@ Should take one arg: the string to display"
 This function is called by each minibuffer started with eldoc support.
 See `with-eldoc-in-minibuffer'."
   (with-selected-window (minibuffer-window)
-    (push (buffer-name) eldoc-active-minibuffers-list)))
+    (push (current-buffer) eldoc-active-minibuffers-list)))
 
 (defmacro with-eldoc-in-minibuffer (&rest body)
   "Enable eldoc support for minibuffer input that runs in BODY."
@@ -166,7 +175,7 @@ See `with-eldoc-in-minibuffer'."
 
 (defun eldoc-mode-in-minibuffer ()
   "Show eldoc for current minibuffer input."
-  (let ((buf (buffer-name (window-buffer (active-minibuffer-window)))))
+  (let ((buf (window-buffer (active-minibuffer-window))))
     ;; If this minibuffer have been started with
     ;;`with-eldoc-in-minibuffer' give it eldoc support
     ;; and update mode-line, otherwise do nothing.
@@ -193,6 +202,9 @@ See `with-eldoc-in-minibuffer'."
     (call-interactively eval-preferred-function)))
 
 ;; Bind it to `M-:'.
+
+;; FIXME: Turn eldoc-in-minibuffer into a global minor mode, and place this
+;; binding in its keymap.
 (global-set-key [remap eval-expression] 'eval-expression-with-eldoc)
 
 
