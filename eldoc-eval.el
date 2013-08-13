@@ -177,7 +177,7 @@ See `with-eldoc-in-minibuffer'."
   "Show eldoc for current minibuffer input."
   :global t
   :keymap eldoc-mode-in-minibuffer-map
-  (define-key minibuffer-local-map (kbd "<C-M-right>")
+  (define-key minibuffer-local-map (kbd "C-@")
     'eldoc-mode-line-toggle-rolling))
 
 (defun run-eldoc-in-minibuffer ()
