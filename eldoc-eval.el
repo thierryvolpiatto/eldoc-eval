@@ -56,6 +56,10 @@
 ;;  Enable displaying eldoc info in something else
 ;;  Than minibuffer when this one is in use.
 ;;
+(defgroup eldoc-eval nil
+  "Show eldoc infos in mode line while minibuffer is in use."
+  :group 'eldoc)
+
 (defcustom eldoc-in-minibuffer-show-fn 'eldoc-show-in-mode-line
   "A function to display eldoc info.
 Should take one arg: the string to display"
@@ -81,7 +85,7 @@ Should take one arg: the string to display"
 ;; New implementation of eldoc in minibuffer that come
 ;; with Emacs-24.4 show the eldoc info of current-buffer while
 ;; minibuffer is in use, disable this and inline old Emacs behavior.
-
+;;
 (defconst eldoc-eval--old-message-function (and (boundp 'eldoc-message-function)
                                                 eldoc-message-function))
 
@@ -165,7 +169,10 @@ See `with-eldoc-in-minibuffer'."
 
 (defun eldoc-mode-line-toggle-rolling ()
   (interactive)
-  (setq eldoc-mode-line-rolling-flag (not eldoc-mode-line-rolling-flag)))
+  (if (and eldoc-in-minibuffer-mode
+           (minibuffer-window-active-p (selected-window)))
+      (setq eldoc-mode-line-rolling-flag (not eldoc-mode-line-rolling-flag))
+      (error "No active minibuffer found")))
 
 (defvar eldoc-mode-in-minibuffer-map
   (let ((map (make-sparse-keymap)))
