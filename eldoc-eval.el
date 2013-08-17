@@ -186,6 +186,9 @@ See `with-eldoc-in-minibuffer'."
   :keymap eldoc-mode-in-minibuffer-map
   (if eldoc-in-minibuffer-mode
       (progn
+        (add-hook 'minibuffer-exit-hook
+                  (lambda ()
+                    (setq eldoc-mode-line-rolling-flag nil)))
         (and (boundp 'eldoc-message-function)
              (setq eldoc-message-function 'message))
         (define-key minibuffer-local-map (kbd "C-@")
