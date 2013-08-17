@@ -82,20 +82,20 @@ Should take one arg: the string to display"
 ;; with Emacs-24.4 show the eldoc info of current-buffer while
 ;; minibuffer is in use, disable this and inline old Emacs behavior.
 
-(when (boundp 'eldoc-message-function)
-  (setq eldoc-message-function 'message)
+(defconst eldoc-eval--old-message-function (and (boundp 'eldoc-message-function)
+                                                eldoc-message-function))
 
-  (defadvice eldoc-display-message-no-interference-p
-      (around eldoc-eval activate)
-    (if (not eldoc-in-minibuffer-mode)
-        ad-do-it
+(defun eldoc-display-message-no-interference-p ()
+  (let (result)
     (and eldoc-mode
          (not executing-kbd-macro)
-         (not (and (boundp 'edebug-active) edebug-active))
-         ;; Having this mode operate in an active minibuffer/echo area causes
-         ;; interference with what's going on there.
-         (not cursor-in-echo-area)
-           (not (eq (selected-window) (minibuffer-window)))))))
+         (setq result (not (and (boundp 'edebug-active) edebug-active)))
+         (if (not eldoc-in-minibuffer-mode)
+             result
+             ;; Having this mode operate in an active minibuffer/echo area causes
+             ;; interference with what's going on there.
+             (not cursor-in-echo-area)
+             (not (eq (selected-window) (minibuffer-window)))))))
 
 ;; Internal.
 (defvar eldoc-active-minibuffers-list nil
@@ -174,11 +174,18 @@ See `with-eldoc-in-minibuffer'."
 
 ;;;###autoload
 (define-minor-mode eldoc-in-minibuffer-mode
-  "Show eldoc for current minibuffer input."
+    "Show eldoc for current minibuffer input."
   :global t
   :keymap eldoc-mode-in-minibuffer-map
-  (define-key minibuffer-local-map (kbd "C-@")
-    'eldoc-mode-line-toggle-rolling))
+  (if eldoc-in-minibuffer-mode
+      (progn
+        (and (boundp 'eldoc-message-function)
+             (setq eldoc-message-function 'message))
+        (define-key minibuffer-local-map (kbd "C-@")
+          'eldoc-mode-line-toggle-rolling))
+      (and (boundp 'eldoc-message-function)
+           (setq eldoc-message-function eldoc-eval--old-message-function))
+      (define-key minibuffer-local-map (kbd "C-@") 'set-mark-command)))
 
 (defun run-eldoc-in-minibuffer ()
   (let ((buf (window-buffer (active-minibuffer-window))))
