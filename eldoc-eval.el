@@ -94,7 +94,9 @@ Should take one arg: the string to display"
     (and eldoc-mode
          (not executing-kbd-macro)
          (setq result (not (and (boundp 'edebug-active) edebug-active)))
-         (if (not eldoc-in-minibuffer-mode)
+         (if (and (not eldoc-in-minibuffer-mode)
+                  ;; If this is non--nil we are in emacs-24.4
+                  eldoc-eval--old-message-function)
              result
              ;; Having this mode operate in an active minibuffer/echo area causes
              ;; interference with what's going on there.
