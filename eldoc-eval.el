@@ -182,14 +182,18 @@ See `with-eldoc-in-minibuffer'."
         (add-hook 'minibuffer-exit-hook
                   (lambda ()
                     (setq eldoc-mode-line-rolling-flag nil)))
-        (and (boundp 'eldoc-message-function)
-             (setq eldoc-message-function 'message))
+        (when (boundp 'eldoc-message-function)
+          (setq eldoc-message-function 'message)
+          (remove-hook 'eval-expression-minibuffer-setup-hook
+                     'eldoc-post-insert-mode))
         (define-key minibuffer-local-map (kbd "C-@")
           'eldoc-mode-line-toggle-rolling)
         (setq eldoc-minor-mode-string " Eldoc-eval"))
       (setq eldoc-minor-mode-string " Eldoc")
-      (and (boundp 'eldoc-message-function)
-           (setq eldoc-message-function eldoc-eval--old-message-function))
+      (when (boundp 'eldoc-message-function)
+        (setq eldoc-message-function eldoc-eval--old-message-function)
+        (add-hook 'eval-expression-minibuffer-setup-hook
+                  'eldoc-post-insert-mode))
       (define-key minibuffer-local-map (kbd "C-@") 'set-mark-command)))
 
 (defun eldoc-run-in-minibuffer ()
