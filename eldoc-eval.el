@@ -169,8 +169,7 @@ See `with-eldoc-in-minibuffer'."
 
 (defvar eldoc-in-minibuffer-mode-map
   (let ((map (make-sparse-keymap)))
-    ;; FIXME: Should we use [remap eval-expression] instead?
-    (define-key map (kbd "M-:") 'eldoc-eval-expression)
+    (define-key map [remap eval-expression] 'eldoc-eval-expression)
     map))
 
 ;;;###autoload
