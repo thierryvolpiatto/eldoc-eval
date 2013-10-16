@@ -77,6 +77,10 @@ Should take one arg: the string to display"
   "Whether minibuffer has its own frame or not."
   :type 'boolean)
 
+(defcustom eldoc-in-minibuffer-mode-lighter " Eldoc-eval"
+  "String displayed in mode-line when `eldoc-in-minibuffer-mode' is enabled."
+  :type 'string)
+
 ;;; Compatibility with Emacs-24.4
 ;; New implementation of eldoc in minibuffer that come
 ;; with Emacs-24.4 show the eldoc info of current-buffer while
@@ -187,7 +191,7 @@ See `with-eldoc-in-minibuffer'."
                      'eldoc-post-insert-mode))
         (define-key minibuffer-local-map (kbd "C-@")
           'eldoc-mode-line-toggle-rolling)
-        (setq eldoc-minor-mode-string " Eldoc-eval"))
+        (setq eldoc-minor-mode-string eldoc-in-minibuffer-mode-lighter))
       (setq eldoc-minor-mode-string " Eldoc")
       (when (boundp 'eldoc-message-function)
         (setq eldoc-message-function eldoc-eval--old-message-function)
