@@ -146,33 +146,29 @@ See `with-eldoc-in-minibuffer'."
              'above (minibuffer-window)))
            (t (minibuffer-selected-window))))))
 
-(defun eldoc-show-in-mode-line (str)
+(defun eldoc-show-in-mode-line (input)
   "Display string STR in the mode-line next to minibuffer."
-  (let (mode-line-in-non-selected-windows)
-    (with-current-buffer (eldoc-current-buffer)
-      (make-local-variable 'mode-line-format)
-      (eldoc-maybe-roll-message-in-mode-line (concat " " str)))))
-
-(defun eldoc-maybe-roll-message-in-mode-line (str)
-  (let* ((max (window-width (get-buffer-window (eldoc-current-buffer))))
-         (len (length str))
-         (tmp-str str)
-         (mode-line-format str)
-         roll)
-    (catch 'break
-      (if (and (> len max) eldoc-mode-line-rolling-flag)
-          (progn
-            (while (setq roll (sit-for 0.3))
-              (setq tmp-str (substring tmp-str 2)
-                    mode-line-format (concat tmp-str " [<]" str))
-              (force-mode-line-update)
-              (when (< (length tmp-str) 2) (setq tmp-str str)))
-            (unless roll
-              (when eldoc-mode-line-stop-rolling-on-input
-                (setq eldoc-mode-line-rolling-flag nil))
-              (throw 'break nil)))
-          (force-mode-line-update)
-          (sit-for eldoc-show-in-mode-line-delay)))
+  (with-current-buffer (eldoc-current-buffer)
+    (let* ((max              (window-width (selected-window)))
+           (str              (concat " " input))
+           (len              (length str))
+           (tmp-str          str)
+           (mode-line-format str)
+           roll mode-line-in-non-selected-windows)
+      (catch 'break
+        (if (and (> len max) eldoc-mode-line-rolling-flag)
+            (progn
+              (while (setq roll (sit-for 0.3))
+                (setq tmp-str (substring tmp-str 2)
+                      mode-line-format (concat tmp-str " [<]" str))
+                (force-mode-line-update)
+                (when (< (length tmp-str) 2) (setq tmp-str str)))
+              (unless roll
+                (when eldoc-mode-line-stop-rolling-on-input
+                  (setq eldoc-mode-line-rolling-flag nil))
+                (throw 'break nil)))
+            (force-mode-line-update)
+            (sit-for eldoc-show-in-mode-line-delay))))
     (force-mode-line-update)))
 
 (defun eldoc-mode-line-toggle-rolling ()
