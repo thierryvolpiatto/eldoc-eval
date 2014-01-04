@@ -1,4 +1,4 @@
-;;; eldoc-eval.el --- Enable eldoc support when minibuffer is in use.
+;;; eldoc-eval.el --- Enable eldoc support when minibuffer is in use. -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2011, 2012, 2013 Free Software Foundation, Inc.
 
@@ -211,7 +211,7 @@ See `with-eldoc-in-minibuffer'."
     ;; If this minibuffer have been started with
     ;;`with-eldoc-in-minibuffer' give it eldoc support
     ;; and update mode-line, otherwise do nothing.
-    (condition-case err
+    (condition-case _err
         (when (member buf eldoc-active-minibuffers-list)
           (with-current-buffer buf
             (let* ((sym (save-excursion
@@ -224,8 +224,7 @@ See `with-eldoc-in-minibuffer'."
                                  (car info-fn) (cadr info-fn)))))
               (funcall eldoc-in-minibuffer-show-fn (or doc 1)))))
       (scan-error nil)
-      (beginning-of-buffer nil)
-      (error (message "Eldoc in minibuffer error: %S" err)))))
+      (beginning-of-buffer nil))))
 
 ;;;###autoload
 (defun eldoc-eval-expression ()
