@@ -123,22 +123,23 @@ See `with-eldoc-in-minibuffer'."
 (defmacro with-eldoc-in-minibuffer (&rest body)
   "Enable eldoc support for minibuffer input that runs in BODY."
   (declare (indent 0) (debug t))
-  `(let ((timer (and eldoc-in-minibuffer-mode
-                     (run-with-idle-timer
-                      eldoc-idle-delay
-                      'repeat #'eldoc-run-in-minibuffer))))
-     (unwind-protect
-         (minibuffer-with-setup-hook
-             ;; When minibuffer is activated in body, store it.
-             #'eldoc-store-minibuffer
-           ,@body)
-       (and timer (cancel-timer timer))
-       ;; Each time a minibuffer exits or aborts
-       ;; its buffer is removed from stack,
-       ;; assuming we can only exit the active minibuffer
-       ;; on top of stack.
-       (setq eldoc-active-minibuffers-list
-             (cdr eldoc-active-minibuffers-list)))))
+  (let ((timer (make-symbol "eldoc-eval--timer")))
+    `(let ((,timer (and eldoc-in-minibuffer-mode
+                       (run-with-idle-timer
+                        eldoc-idle-delay
+                        'repeat #'eldoc-run-in-minibuffer))))
+       (unwind-protect
+            (minibuffer-with-setup-hook
+                ;; When minibuffer is activated in body, store it.
+                #'eldoc-store-minibuffer
+              ,@body)
+         (and ,timer (cancel-timer ,timer))
+         ;; Each time a minibuffer exits or aborts
+         ;; its buffer is removed from stack,
+         ;; assuming we can only exit the active minibuffer
+         ;; on top of stack.
+         (setq eldoc-active-minibuffers-list
+               (cdr eldoc-active-minibuffers-list))))))
 
 (defun eldoc-current-buffer ()
   "Return the current buffer prior to activating the minibuffer."
