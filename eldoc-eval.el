@@ -54,8 +54,8 @@
 (when (require 'elisp-mode nil t) ; emacs-25
   (defalias 'eldoc-current-symbol 'elisp--current-symbol)
   (defalias 'eldoc-fnsym-in-current-sexp 'elisp--fnsym-in-current-sexp)
-  (defalias 'eldoc-get-fnsym-args-string 'elisp--get-fnsym-args-string)
-  (defalias 'eldoc-get-var-docstring 'elisp--get-var-docstring))
+  (defalias 'eldoc-get-fnsym-args-string 'elisp-get-fnsym-args-string)
+  (defalias 'eldoc-get-var-docstring 'elisp-get-var-docstring))
 
 ;;; Minibuffer support.
 ;;  Enable displaying eldoc info in something else
@@ -221,7 +221,7 @@ See `with-eldoc-in-minibuffer'."
         (when (member buf eldoc-active-minibuffers-list)
           (with-current-buffer buf
             (let* ((sym (save-excursion
-                          (unless (looking-back ")\\|\"")
+                          (unless (looking-back ")\\|\"" (1- (point)))
                             (forward-char -1))
                           (eldoc-current-symbol)))
                    (info-fn (eldoc-fnsym-in-current-sexp))
