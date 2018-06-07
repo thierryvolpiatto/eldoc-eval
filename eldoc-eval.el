@@ -193,6 +193,7 @@ See `with-eldoc-in-minibuffer'."
 (define-minor-mode eldoc-in-minibuffer-mode
     "Show eldoc for current minibuffer input."
   :global t
+  :group 'eldoc-eval
   (if eldoc-in-minibuffer-mode
       (progn
         (add-hook 'minibuffer-exit-hook
