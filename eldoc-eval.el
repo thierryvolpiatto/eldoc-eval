@@ -51,11 +51,12 @@
 
 ;;; Code:
 (require 'eldoc)
-(when (require 'elisp-mode nil t) ; emacs-25
-  (defalias 'eldoc-current-symbol 'elisp--current-symbol)
-  (defalias 'eldoc-fnsym-in-current-sexp 'elisp--fnsym-in-current-sexp)
-  (defalias 'eldoc-get-fnsym-args-string 'elisp-get-fnsym-args-string)
-  (defalias 'eldoc-get-var-docstring 'elisp-get-var-docstring))
+(eval-and-compile
+  (when (require 'elisp-mode nil t)      ; emacs-25
+    (defalias 'eldoc-current-symbol 'elisp--current-symbol)
+    (defalias 'eldoc-fnsym-in-current-sexp 'elisp--fnsym-in-current-sexp)
+    (defalias 'eldoc-get-fnsym-args-string 'elisp-get-fnsym-args-string)
+    (defalias 'eldoc-get-var-docstring 'elisp-get-var-docstring)))
 
 ;;; Minibuffer support.
 ;;  Enable displaying eldoc info in something else
@@ -177,13 +178,6 @@ See `with-eldoc-in-minibuffer'."
             (sit-for eldoc-show-in-mode-line-delay))))
     (force-mode-line-update)))
 
-(defun eldoc-mode-line-toggle-rolling ()
-  (interactive)
-  (if (and eldoc-in-minibuffer-mode
-           (minibuffer-window-active-p (selected-window)))
-      (setq eldoc-mode-line-rolling-flag (not eldoc-mode-line-rolling-flag))
-      (error "No active minibuffer found")))
-
 (defvar eldoc-in-minibuffer-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [remap eval-expression] 'eldoc-eval-expression)
@@ -212,6 +206,13 @@ See `with-eldoc-in-minibuffer'."
         (add-hook 'eval-expression-minibuffer-setup-hook
                   'eldoc-post-insert-mode))
       (define-key minibuffer-local-map (kbd "C-@") 'set-mark-command)))
+
+(defun eldoc-mode-line-toggle-rolling ()
+  (interactive)
+  (if (and eldoc-in-minibuffer-mode
+           (minibuffer-window-active-p (selected-window)))
+      (setq eldoc-mode-line-rolling-flag (not eldoc-mode-line-rolling-flag))
+      (error "No active minibuffer found")))
 
 (defun eldoc-run-in-minibuffer ()
   (let ((buf (window-buffer (active-minibuffer-window))))
