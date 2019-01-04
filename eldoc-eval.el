@@ -91,6 +91,35 @@ Should take one arg: the string to display"
   "When rolling mode-line is enabled, stop rolling on input when non--nil."
   :type 'boolean)
 
+;; Internal.
+(defvar eldoc-active-minibuffers-list nil
+  "List of active minibuffers with eldoc enabled.")
+(defvar eldoc-mode-line-rolling-flag nil)
+
+;;;###autoload
+(define-minor-mode eldoc-in-minibuffer-mode
+    "Show eldoc for current minibuffer input."
+  :global t
+  :group 'eldoc-eval
+  (if eldoc-in-minibuffer-mode
+      (progn
+        (add-hook 'minibuffer-exit-hook
+                  (lambda ()
+                    (setq eldoc-mode-line-rolling-flag nil)))
+        (when (boundp 'eldoc-post-insert-mode)
+          (setq eldoc-message-function 'message)
+          (remove-hook 'eval-expression-minibuffer-setup-hook
+                       'eldoc-post-insert-mode))
+        (define-key minibuffer-local-map (kbd "C-@")
+          'eldoc-mode-line-toggle-rolling)
+        (setq eldoc-minor-mode-string eldoc-in-minibuffer-mode-lighter))
+      (setq eldoc-minor-mode-string " Eldoc")
+      (when (boundp 'eldoc-post-insert-mode)
+        (setq eldoc-message-function eldoc-eval--old-message-function)
+        (add-hook 'eval-expression-minibuffer-setup-hook
+                  'eldoc-post-insert-mode))
+      (define-key minibuffer-local-map (kbd "C-@") 'set-mark-command)))
+
 ;;; Compatibility with Emacs-24.4
 ;; New implementation of eldoc in minibuffer that come
 ;; with Emacs-24.4 show the eldoc info of current-buffer while
@@ -108,11 +137,6 @@ Should take one arg: the string to display"
                ;; causes interference with what's going on there.
                (not cursor-in-echo-area)
                (not (eq (selected-window) (minibuffer-window)))))))
-
-;; Internal.
-(defvar eldoc-active-minibuffers-list nil
-  "List of active minibuffers with eldoc enabled.")
-(defvar eldoc-mode-line-rolling-flag nil)
 
 (defun eldoc-store-minibuffer ()
   "Store minibuffer buffer name in `eldoc-active-minibuffers-list'.
@@ -182,30 +206,6 @@ See `with-eldoc-in-minibuffer'."
   (let ((map (make-sparse-keymap)))
     (define-key map [remap eval-expression] 'eldoc-eval-expression)
     map))
-
-;;;###autoload
-(define-minor-mode eldoc-in-minibuffer-mode
-    "Show eldoc for current minibuffer input."
-  :global t
-  :group 'eldoc-eval
-  (if eldoc-in-minibuffer-mode
-      (progn
-        (add-hook 'minibuffer-exit-hook
-                  (lambda ()
-                    (setq eldoc-mode-line-rolling-flag nil)))
-        (when (boundp 'eldoc-post-insert-mode)
-          (setq eldoc-message-function 'message)
-          (remove-hook 'eval-expression-minibuffer-setup-hook
-                       'eldoc-post-insert-mode))
-        (define-key minibuffer-local-map (kbd "C-@")
-          'eldoc-mode-line-toggle-rolling)
-        (setq eldoc-minor-mode-string eldoc-in-minibuffer-mode-lighter))
-      (setq eldoc-minor-mode-string " Eldoc")
-      (when (boundp 'eldoc-post-insert-mode)
-        (setq eldoc-message-function eldoc-eval--old-message-function)
-        (add-hook 'eval-expression-minibuffer-setup-hook
-                  'eldoc-post-insert-mode))
-      (define-key minibuffer-local-map (kbd "C-@") 'set-mark-command)))
 
 (defun eldoc-mode-line-toggle-rolling ()
   (interactive)
