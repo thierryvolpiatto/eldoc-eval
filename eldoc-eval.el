@@ -91,6 +91,14 @@ Should take one arg: the string to display"
   "When rolling mode-line is enabled, stop rolling on input when non--nil."
   :type 'boolean)
 
+;;; Compatibility with Emacs-24.4
+;; New implementation of eldoc in minibuffer that come
+;; with Emacs-24.4 show the eldoc info of current-buffer while
+;; minibuffer is in use, disable this and inline old Emacs behavior.
+;;
+(defconst eldoc-eval--old-message-function
+  (and (boundp 'eldoc-message-function) eldoc-message-function))
+
 ;; Internal.
 (defvar eldoc-active-minibuffers-list nil
   "List of active minibuffers with eldoc enabled.")
@@ -119,14 +127,6 @@ Should take one arg: the string to display"
         (add-hook 'eval-expression-minibuffer-setup-hook
                   'eldoc-post-insert-mode))
       (define-key minibuffer-local-map (kbd "C-@") 'set-mark-command)))
-
-;;; Compatibility with Emacs-24.4
-;; New implementation of eldoc in minibuffer that come
-;; with Emacs-24.4 show the eldoc info of current-buffer while
-;; minibuffer is in use, disable this and inline old Emacs behavior.
-;;
-(defconst eldoc-eval--old-message-function
-  (and (boundp 'eldoc-message-function) eldoc-message-function))
 
 (defadvice eldoc-display-message-no-interference-p
     (after eldoc-eval activate)
