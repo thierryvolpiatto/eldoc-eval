@@ -104,6 +104,11 @@ Should take one arg: the string to display"
   "List of active minibuffers with eldoc enabled.")
 (defvar eldoc-mode-line-rolling-flag nil)
 
+(defvar eldoc-in-minibuffer-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [remap eval-expression] 'eldoc-eval-expression)
+    map))
+
 ;;;###autoload
 (define-minor-mode eldoc-in-minibuffer-mode
     "Show eldoc for current minibuffer input."
@@ -201,11 +206,6 @@ See `with-eldoc-in-minibuffer'."
             (force-mode-line-update)
             (sit-for eldoc-show-in-mode-line-delay))))
     (force-mode-line-update)))
-
-(defvar eldoc-in-minibuffer-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap eval-expression] 'eldoc-eval-expression)
-    map))
 
 (defun eldoc-mode-line-toggle-rolling ()
   (interactive)
