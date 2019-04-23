@@ -3,7 +3,6 @@
 ;; Copyright (C) 2011, 2012, 2013 Free Software Foundation, Inc.
 
 ;; Author: Thierry Volpiatto <thierry.volpiatto@gmail.com>
-;; Version: 0.1
 
 ;; This file is part of GNU Emacs.
 
