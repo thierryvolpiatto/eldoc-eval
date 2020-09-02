@@ -57,6 +57,8 @@
     (defalias 'eldoc-get-fnsym-args-string 'elisp-get-fnsym-args-string)
     (defalias 'eldoc-get-var-docstring 'elisp-get-var-docstring)))
 
+(defvar composition-function-table)
+
 ;;; Minibuffer support.
 ;;  Enable displaying eldoc info in something else
 ;;  Than minibuffer when this one is in use.
@@ -188,6 +190,7 @@ See `with-eldoc-in-minibuffer'."
            (str              (and (stringp input) (concat " " input)))
            (len              (length str))
            (tmp-str          str)
+           (composition-function-table (default-value 'composition-function-table))
            (mode-line-format (or str mode-line-format))
            roll mode-line-in-non-selected-windows)
       (catch 'break
