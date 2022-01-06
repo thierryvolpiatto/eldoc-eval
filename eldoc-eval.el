@@ -1,8 +1,9 @@
 ;;; eldoc-eval.el --- Enable eldoc support when minibuffer is in use. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011, 2012, 2013 Free Software Foundation, Inc.
+;; Copyright (C) 2011-2022  Free Software Foundation, Inc.
 
-;; Author: Thierry Volpiatto <thierry.volpiatto@gmail.com>
+;; Author: Thierry Volpiatto <thievol@posteo.net>
+;; Version: 0.2
 
 ;; This file is part of GNU Emacs.
 
